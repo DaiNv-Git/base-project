@@ -19,16 +19,17 @@ import java.util.Arrays;
 public class SwaggerConfig extends WebMvcConfigurationSupport{
     @Bean
     public Docket api() {
-        Docket docket = new Docket(DocumentationType.SWAGGER_2)
+        Docket docket = new Docket(DocumentationType.OAS_30)
                 .select()
                 .apis(RequestHandlerSelectors.any())
                 .paths(PathSelectors.any())
                 .build()
                 .apiInfo(apiInfo());
-        docket.globalRequestParameters(Arrays.asList(
-                new RequestParameterBuilder().name("Authorization")
-                        .description("Authorization details for security JWT token")
-                        .in(ParameterType.HEADER).required(false).build()));
+        //BAT BUOC nhap api
+//        docket.globalRequestParameters(Arrays.asList(
+//                new RequestParameterBuilder().name("Authorization")
+//                        .description("Authorization details for security JWT token")
+//                        .in(ParameterType.HEADER).required(false).build()));
         return docket;
     }
 
@@ -40,7 +41,7 @@ public class SwaggerConfig extends WebMvcConfigurationSupport{
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
     private ApiInfo apiInfo() {
-        Contact contact = new Contact("Power2SME Pvt. Ltd.", "http://www.power2sme.com", "support@power2sme.com");
+        Contact contact = new Contact("dai dep trai", "http://www.power2sme.com", "support@power2sme.com");
         return new ApiInfo("NBFC API", "Information related to api exposed by NBFC system.", "1.0",
                 "https://www.power2sme.com/termsandconditions", contact, "License of API",
                 "https://www.power2sme.com/privacypolicy", new ArrayList<>());
