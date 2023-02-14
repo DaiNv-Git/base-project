@@ -1,6 +1,5 @@
 package com.example.itspower.component.util;
 import com.example.itspower.type.RegexType;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
@@ -11,10 +10,6 @@ import java.util.*;
 
 @Component
 public class ConverterUtils {
-
-
-
-
     public static String formatNumberToString(long number) {
         String pattern = "###,###";
         DecimalFormat decimalFormat = new DecimalFormat(pattern);
