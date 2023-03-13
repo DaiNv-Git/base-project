@@ -3,43 +3,65 @@ package com.example.itspower.service.impl;
 import com.example.itspower.model.entity.GroupEntity;
 import com.example.itspower.model.entity.ReportDtlEntity;
 import com.example.itspower.model.entity.ReportEntity;
-import com.example.itspower.model.entity.TransferEntity;
 import com.example.itspower.repository.ReportDtlRepository;
 import com.example.itspower.repository.ReportRepository;
-import com.example.itspower.repository.TransferRepository;
 import com.example.itspower.repository.repositoryjpa.GroupRepository;
+import com.example.itspower.response.ReportDetailResponse;
 import com.example.itspower.response.ReportResponse;
 import com.example.itspower.response.request.ReportRequest;
 import com.example.itspower.service.ReportService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.transform.Transformers;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import java.util.List;
 
 @Service
 public class ReportServiceImpl implements ReportService {
-    @Autowired
-    private ReportRepository reportRepository;
-    @Autowired
-    private ReportDtlRepository reportDtlRepository;
-    @Autowired
-    private TransferRepository transferRepository;
-    @Autowired
-    private GroupRepository groupRepository;
+
+    private final ReportRepository reportRepository;
+    private final ReportDtlRepository reportDtlRepository;
+    private final GroupRepository groupRepository;
+    private final EntityManager entityManager;
+
+    public ReportServiceImpl(ReportRepository reportRepository, ReportDtlRepository reportDtlRepository, GroupRepository groupRepository,@Qualifier("primaryEntityManager") EntityManager entityManager) {
+        this.reportRepository = reportRepository;
+        this.reportDtlRepository = reportDtlRepository;
+        this.groupRepository = groupRepository;
+        this.entityManager = entityManager;
+    }
 
 
     @Override
     public ReportResponse add(ReportRequest request) {
         try {
             ReportEntity reportEntity = reportRepository.save(request);
-            TransferEntity transferEntity = transferRepository.saveTransfer(request.getReportDtlRequest().getTransferSupport(), request.getReportDtlRequest().getTransferNum(), reportEntity.getId(), request.getUserGroupId());
-            ReportDtlEntity dtlEntities = reportDtlRepository.saveDtls(request.getReportDtlRequest(), reportEntity.getId(), transferEntity.getId());
+            ReportDtlEntity dtlEntities = reportDtlRepository.saveDtls(request.getReportDtlRequest(), reportEntity.getId());
             return new ReportResponse(reportEntity, dtlEntities);
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
     }
 
+    public Object detail(String orderDate, Integer userGroupId) {
+        reportRepository.isCheckOrderDate(orderDate);
+        try {
+            StringBuilder query = new StringBuilder();
+            query.append("select r.demarcation ,r2.rest_number as restNum ,r2.part_time_num as partTimeNum ,r2.student_num as studentNum ,t.num_transfer as transferNum, " +
+                    "t1.num_transfer as supportNum,r2.rice_number as riceNum,r.total_productivity as totalProductivity from report r join reportdtl r2 on r.id =r2.report_id " +
+                    "join transfer t on t.report_id = r.id  and t.transfer_type =1 " +
+                    "join transfer t1 on t1.report_id = r.id  and t1.transfer_type =2 " +
+                    "join employee_rest er on er.report_id = r.id where DATE_FORMAT(r.order_date , '%Y%m%d') = DATE_FORMAT(" + orderDate + ", '%Y%m%d') and r.user_group_id = " + userGroupId + " ");
+            Query queryResult = entityManager.createNativeQuery(query.toString());
+            List<ReportDetailResponse> response =  queryResult.unwrap(NativeQuery.class).setResultTransformer(Transformers.aliasToBean(ReportDetailResponse.class)).getResultList();
+            return response;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 
     @Override
     public List<GroupEntity> getListGroup() {

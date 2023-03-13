@@ -23,6 +23,16 @@ public class ReportRepository {
         reportEntity.setOrderDate(new Date());
         reportEntity.setUserGroupId(request.getUserGroupId());
         reportEntity.setCreateBy(request.getCreateBy());
+        reportEntity.setDemarcation(request.getTotalProductivity());
+        reportEntity.setDemarcation(request.getDemarcation());
         return reportJpaRepository.save(reportEntity);
+    }
+
+    public boolean isCheckOrderDate(String orderDate) {
+        Optional<ReportEntity> reportEntity = reportJpaRepository.findByOrderDate(orderDate);
+        if (reportEntity.isPresent()) {
+            return true;
+        }
+        return false;
     }
 }
